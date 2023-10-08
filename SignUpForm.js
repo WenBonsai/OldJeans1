@@ -1,67 +1,77 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, TextInput, Button, StyleSheet } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { addCustomer } from './databaseActions';  // Adjust the path as needed
 
 const SignUpForm = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [isCompleted, setCompleted] = useState(false);
-    const [isLoading, setLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState(null);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [area, setArea] = useState('');
+  const [errorMessage, setErrorMessage] = useState(null);
 
-    const auth = getAuth();
+  const auth = getAuth();
 
-    const handleSignUp = async () => {
-        setLoading(true);
+  const handleSignUp = async () => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const customer = {
+        Name: name,
+        Email: email,
+        Password: password, // Please ensure this is hashed and secured before being stored
+        CustomerID: userCredential.user.uid, // Using Firebase Auth UID as CustomerID
+        Area: area
+      };
+      
+      await addCustomer(customer);
+      setName('');
+      setEmail('');
+      setPassword('');
+      setArea('');
+      setErrorMessage(null);
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(error.message);
+    }
+  };
 
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            setCompleted(true);
-            setEmail('');
-            setPassword('');
-            setErrorMessage(null);
-        } catch (error) {
-            console.log(error); // add this
-            setErrorMessage(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <View style={styles.container}>
-            <Text>Opret en brugerkonto</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="grey"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Adgangskode"
-                placeholderTextColor="grey"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-            
-            {isLoading ? (
-                <ActivityIndicator size="small" color="#0000ff" />
-            ) : (
-                <Button title="Opret bruger" onPress={handleSignUp} />
-            )}
-            
-            {isCompleted && <Text style={styles.successMessage}>Brugeren er oprettet med succes!</Text>}
-            {errorMessage && <Text style={styles.errorMessage}>Fejl: {errorMessage}</Text>}
-        </View>
-    );
+  return (
+    <View style={styles.container}>
+      <TextInput
+        style={styles.input}
+        placeholder="Name"
+        placeholderTextColor="grey"
+        value={name}
+        onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        placeholderTextColor="grey"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        placeholderTextColor="grey"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Area"
+        placeholderTextColor="grey"
+        value={area}
+        onChangeText={setArea}
+      />
+      <Button title="Sign Up" onPress={handleSignUp} />
+      {errorMessage && <Text style={styles.errorMessage}>Error: {errorMessage}</Text>}
+    </View>
+  );
 }
-
-// ... rest of the styles and export remains the same
-
 
 const styles = StyleSheet.create({
     container: {

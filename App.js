@@ -11,25 +11,16 @@ import { getAnalytics, isSupported as isAnalyticsSupported } from "firebase/anal
 import { getAuth, onAuthStateChanged } from 'firebase/auth';  // <-- Here's the correction
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { getFirestore } from "firebase/firestore";
 
-
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyCMwyrKLb8YWzzc7j1U0_efT01K4jTaT34",
-  authDomain: "oldjeans1-5dbbe.firebaseapp.com",
-  projectId: "oldjeans1-5dbbe",
-  storageBucket: "oldjeans1-5dbbe.appspot.com",
-  messagingSenderId: "279762862098",
-  appId: "1:279762862098:web:7cc0c65e9bfa7f222298cb",
-  measurementId: "G-93R9ELLMJF"
-};
+import db from './firebaseConfig';
 
 const Tab = createBottomTabNavigator();
 
+
 // Check if Firebase is already initialized
 if (getApps().length < 1) {
-  initializeApp(firebaseConfig);
+  initializeApp(db);
   console.log("Firebase On!");
   if (isAnalyticsSupported()) {
     const analytics = getAnalytics();
@@ -41,6 +32,21 @@ if (getApps().length < 1) {
 const App = () => {
   const [user, setUser] = useState(null);
   const auth = getAuth();
+
+  let app;
+if (getApps().length < 1) {
+  app = initializeApp(db); // Store the initialized app in a variable
+  console.log("Firebase On!");
+  if (isAnalyticsSupported()) {
+    const analytics = getAnalytics();
+  }
+} else {
+  console.log("Firebase already initialized!");
+  app = getApps()[0]; // Get the already initialized app
+}
+  
+  // Initialize Cloud Firestore and get a reference to the service
+const db = getFirestore(app);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
